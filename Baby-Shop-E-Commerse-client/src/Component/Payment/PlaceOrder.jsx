@@ -1,113 +1,66 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
-import { ShopContext } from "../../Context/CartItem/ShopContext";
+import { useDispatch, useSelector } from "react-redux";
 import { BsCheckCircleFill, BsFillArrowLeftSquareFill } from "react-icons/bs";
+import { fetchCartItems } from "../../Redux/ShopSlice";
+import { placeOrder, verifyPayment } from "../../Redux/OrderSlice";
 
 const PaymentPage = () => {
   const [name, setName] = useState("");
   const [place, setPlace] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
-  const [totalPrice, setTotalPrice] = useState(0);
-  const [errorMessage, setErrorMessage] = useState(""); 
+  const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
   const token = Cookies.get("token");
   const currentUser = Cookies.get("currentUser");
   const userId = currentUser ? JSON.parse(currentUser).id : null;
-  const { setCartItems, clearCart, getCartItems } = useContext(ShopContext);
 
-  const fetchCartItems = async () => {
-    if (!userId) return;
-    try {
-      const items = await getCartItems(userId);
-
-      const total = items.reduce(
-        (sum, item) => sum + item.productId.price * item.quantity,
-        0
-      );
-      setTotalPrice(total);
-    } catch (error) {
-      console.error("Error fetching cart items:", error);
-    }
-  };
+  const dispatch = useDispatch();
+  const { items, totalPrice } = useSelector((state) => state.cart);
 
   useEffect(() => {
-    fetchCartItems();
-  }, []);
+    if (userId) {
+      dispatch(fetchCartItems(userId));
+    }
+  }, [userId, dispatch]);
 
   const handlePlaceOrder = async () => {
-    // Validation check
     if (!name || !place || !phone || !address) {
       setErrorMessage("All fields are required.");
       return;
     }
 
-    try {
-      const response = await fetch("http://localhost:5000/users/order", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ userId, name, place, phone, address }),
-      });
+    const orderData = await dispatch(
+      placeOrder({ userId, name, place, phone, address, token })
+    ).unwrap();
 
-      if (!response.ok) {
-        throw new Error("Failed to create order");
-      }
+    const options = {
+      key: orderData.razorpayKeyId,
+      amount: orderData.order.totalPrice * 100,
+      currency: "INR",
+      name: "Baby Shop",
+      description: "Thank you for your purchase",
+      order_id: orderData.razorpayOrderId,
+      handler: async function (response) {
+        try {
+          const paymentData = {
+            razorpayOrderId: response.razorpay_order_id,
+            razorpayPaymentId: response.razorpay_payment_id,
+            razorpaySignature: response.razorpay_signature,
+          };
 
-      const data = await response.json();
+          await dispatch(verifyPayment({ paymentData, token })).unwrap();
+          navigate("/orderDetails");
+        } catch (error) {
+          console.error("Error verifying payment:", error);
+        }
+      },
+    };
 
-      const options = {
-        key: data.razorpayKeyId,
-        amount: data.order.totalPrice * 100,
-        currency: "INR",
-        name: "Baby Shop",
-        description: "Thank you for your purchase",
-        order_id: data.razorpayOrderId,
-        handler: async function (response) {
-          try {
-            const verifyResponse = await fetch(
-              "http://localhost:5000/users/order/verify",
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                  razorpayOrderId: response.razorpay_order_id,
-                  razorpayPaymentId: response.razorpay_payment_id,
-                  razorpaySignature: response.razorpay_signature,
-                }),
-              }
-            );
-
-            if (!verifyResponse.ok) {
-              throw new Error("Payment verification failed");
-            }
-
-            const verifyData = await verifyResponse.json();
-            console.log("Payment verified:", verifyData);
-
-            setCartItems([]);
-
-            navigate("/orderDetails");
-          } catch (error) {
-            console.error("Error verifying payment:", error);
-
-            setCartItems([]);
-          }
-        },
-      };
-
-      const rzp = new window.Razorpay(options);
-      rzp.open();
-    } catch (error) {
-      console.error("Error during checkout:", error);
-      await clearCart(userId);
-    }
+    const rzp = new window.Razorpay(options);
+    rzp.open();
   };
 
   return (

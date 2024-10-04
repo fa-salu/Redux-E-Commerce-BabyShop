@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   FaSearch,
   FaCartArrowDown,
@@ -7,9 +7,14 @@ import {
   FaTimes,
 } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
-import { ShopContext } from "../../Context/CartItem/ShopContext";
+import { useDispatch, useSelector } from "react-redux";
 import SlideBar from "../CartSlidBar/SlideBar";
 import Cookies from "js-cookie";
+import {
+  setSearch,
+  getFilteredProducts,
+  getCartItems,
+} from "../../features/shopSlice"; // Import your Redux actions
 import "./Navbar.css";
 
 const Navbar = () => {
@@ -17,26 +22,24 @@ const Navbar = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
 
   const navigate = useNavigate();
-  const {
-    search,
-    setSearch,
-    filteredProducts,
-    currentUser,
-    getCartItems,
-    cartItems,
-  } = useContext(ShopContext);
+  const dispatch = useDispatch();
 
-   const clearSearch = () => {
-    setSearch('');
-  }
+  const search = useSelector((state) => state.shop.search);
+  const filteredProducts = useSelector((state) => state.shop.filteredProducts);
+  const currentUser = useSelector((state) => state.shop.currentUser);
+  const cartItems = useSelector((state) => state.shop.cartItems);
+
+  const clearSearch = () => {
+    dispatch(setSearch("")); // Clear search using Redux action
+  };
 
   const isAdmin = Cookies.get("isAdmin");
 
   useEffect(() => {
     if (currentUser) {
-      getCartItems(currentUser.id);
+      dispatch(getCartItems(currentUser.id)); // Fetch cart items using Redux action
     }
-  }, [currentUser]);
+  }, [currentUser, dispatch]);
 
   const handleClick = () => {
     navigate(currentUser ? "/profile" : "/login");
@@ -48,6 +51,11 @@ const Navbar = () => {
 
   const toggleCart = () => {
     setIsCartOpen(!isCartOpen);
+  };
+
+  const handleSearchChange = (e) => {
+    dispatch(setSearch(e.target.value)); // Update search in Redux state
+    dispatch(getFilteredProducts(e.target.value)); // Fetch filtered products based on search
   };
 
   return (
@@ -81,7 +89,8 @@ const Navbar = () => {
               <div className="relative">
                 <input
                   type="text"
-                  onChange={(e) => setSearch(e.target.value)}
+                  value={search}
+                  onChange={handleSearchChange} // Update search input handling with Redux
                   placeholder="Search..."
                   className="pl-10 pr-4 py-2 border rounded-full text-black w-full sm:w-64"
                 />
@@ -93,7 +102,6 @@ const Navbar = () => {
                     onClick={toggleCart}
                     className="menu-cart hover:text-pink-500 cursor-pointer"
                   />
-
                   <span className="absolute -top-2.5 left-3/4 bg-red-500 text-white rounded-full text-xs px-1">
                     {cartItems.length}
                   </span>
@@ -170,12 +178,12 @@ const Navbar = () => {
                       </span>
                       <button
                         onClick={() => {
-                           clearSearch();
-                           navigate(`/shop/${product._id}`);
-                         }}
+                          clearSearch();
+                          navigate(`/shop/${product._id}`);
+                        }}
                         className="bg-green-500 hover:bg-green-600 text-white py-1 px-3 rounded-md focus:outline-none"
                       >
-                       View Cart
+                        View Product
                       </button>
                     </div>
                   </div>

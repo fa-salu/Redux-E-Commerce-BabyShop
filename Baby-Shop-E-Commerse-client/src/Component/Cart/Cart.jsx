@@ -1,56 +1,36 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ShopContext } from "../../Context/CartItem/ShopContext";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchProductById, fetchRelatedProducts, addToCart } from "../../Redux/ShopSlice";
 import Spinner from "../Spinner/Spinner";
 import { BsFillArrowLeftSquareFill } from "react-icons/bs";
 import { FaShoppingCart } from "react-icons/fa";
 
 const Cart = () => {
   const { id } = useParams();
-  const [relatedProducts, setRelatedProducts] = useState([]);
-  const [product, setProduct] = useState(null);
-  const [relatedLoading, setRelatedLoading] = useState(true);
   const navigate = useNavigate();
-  const { addToCart, currentUser } = useContext(ShopContext);
+  const dispatch = useDispatch();
+
+  // Get state from Redux store
+  const { product, relatedProducts, currentUser, relatedLoading } = useSelector((state) => state.shop);
 
   // Fetch the product by ID from the backend
   useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        const response = await fetch(
-          `http://localhost:5000/users/product/${id}`
-        );
-        const data = await response.json();
-        setProduct(data);
+    dispatch(fetchProductById(id));
+  }, [dispatch, id]);
 
-        // Fetch related products based on category
-        if (data.category) {
-          const response = await fetch(
-            `http://localhost:5000/users/products/${data.category}`
-          );
-          const relatedData = await response.json();
-
-          const filteredRelatedProducts = relatedData.filter(
-            (item) => item._id !== id
-          );
-
-          setRelatedProducts(filteredRelatedProducts);
-        }
-      } catch (error) {
-        console.error("Error fetching product:", error);
-      } finally {
-        setRelatedLoading(false);
-      }
-    };
-
-    fetchProduct();
-  }, [id]);
+  // Fetch related products based on product's category when the product is loaded
+  useEffect(() => {
+    if (product?.category) {
+      dispatch(fetchRelatedProducts(product.category));
+    }
+  }, [dispatch, product]);
 
   // Handle Add to Cart Click
   const handleAddToCartClick = async () => {
     if (currentUser) {
       try {
-        await addToCart(currentUser.id, id);
+        await dispatch(addToCart({ userId: currentUser.id, productId: id }));
       } catch (error) {
         console.error("Error adding item to cart:", error);
       }
@@ -95,7 +75,6 @@ const Cart = () => {
             </p>
           </div>
           <div className="flex justify-center">
-            {" "}
             <button
               onClick={handleAddToCartClick}
               className="w-20 p-2 bg-green-500 text-white rounded-full hover:bg-green-700 flex items-center justify-center"

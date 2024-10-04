@@ -1,21 +1,22 @@
-import React, { useContext, useEffect } from "react";
+import React, { useEffect } from "react";
 import { FaTimes } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import Cookies from "js-cookie";
-import { ShopContext } from "../../Context/CartItem/ShopContext";
+import { useDispatch, useSelector } from "react-redux";
+import { getCartItems, addToCart, removeCartItem } from "../../features/shopSlice"; // Import your Redux actions
 
 const SlideBar = ({ isCartOpen, toggleCart }) => {
-  const { cartItems, addToCart, removeCartItem, deleteCartItem, getCartItems } =
-    useContext(ShopContext);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const currentUser = Cookies.get("currentUser");
-  const userId = currentUser ? JSON.parse(currentUser).id : null;
+  
+  const cartItems = useSelector((state) => state.shop.cartItems); // Select cart items from Redux state
+  const currentUser = useSelector((state) => state.shop.currentUser); // Select current user from Redux state
+  const userId = currentUser ? currentUser.id : null;
 
   useEffect(() => {
     if (isCartOpen && userId) {
-      getCartItems(userId);
+      dispatch(getCartItems(userId)); // Fetch cart items when the cart opens
     }
-  }, [isCartOpen, userId]);
+  }, [isCartOpen, userId, dispatch]);
 
   const handleViewCart = () => {
     navigate("/cartitems");
@@ -24,8 +25,8 @@ const SlideBar = ({ isCartOpen, toggleCart }) => {
 
   const handleAddToCart = async (productId) => {
     try {
-      await addToCart(userId, productId);
-      getCartItems(userId);
+      await dispatch(addToCart({ userId, productId })); // Dispatch add to cart action
+      dispatch(getCartItems(userId)); // Fetch updated cart items
     } catch (error) {
       console.error("Error adding item to cart:", error);
     }
@@ -33,19 +34,10 @@ const SlideBar = ({ isCartOpen, toggleCart }) => {
 
   const handleRemoveFromCart = async (productId) => {
     try {
-      await removeCartItem(userId, productId);
-      getCartItems(userId);
+      await dispatch(removeCartItem({ userId, productId })); // Dispatch remove from cart action
+      dispatch(getCartItems(userId)); // Fetch updated cart items
     } catch (error) {
       console.error("Error removing item from cart:", error);
-    }
-  };
-
-  const handleDeleteFromCart = async (productId) => {
-    try {
-      await deleteCartItem(userId, productId);
-      getCartItems(userId);
-    } catch (error) {
-      console.error("Error deleting item from cart:", error);
     }
   };
 
@@ -109,7 +101,7 @@ const SlideBar = ({ isCartOpen, toggleCart }) => {
                       </p>
                     </div>
                     <button
-                      onClick={() => handleDeleteFromCart(item.productId._id)}
+                      onClick={() => handleRemoveFromCart(item.productId._id)}
                       className="px-3 py-1 bg-red-500 text-white rounded-md"
                     >
                       Remove

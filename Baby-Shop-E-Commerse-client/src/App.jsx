@@ -12,7 +12,7 @@ import Profile from "./Pages/Profile";
 import Testimonial from "./Pages/Testimonial";
 import Cart from "./Component/Cart/Cart";
 import CartItems from "./Component/Cart/CartItems";
-import ProtectRoute from "./Context/ProfileProtect/ProtectUserData";
+import ProtectRoute from "./Component/ProfileProtect/ProtectUserData";
 import AdminHome from "./Admin/Pages/AdminHome/AdminHome";
 import Dashboard from "./Admin/Pages/Dashboard";
 import Categories from "./Admin/Pages/Categories";
