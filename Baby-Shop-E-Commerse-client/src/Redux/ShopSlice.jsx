@@ -7,11 +7,10 @@ const initialState = {
   wishlistItems: [],
   currentUser: null,
   search: "",
-  status: "idle", // 'idle' | 'loading' | 'succeeded' | 'failed'
+  status: "idle",
   error: null,
 };
 
-// Async thunk to fetch a product by ID
 export const fetchProductById = createAsyncThunk(
   "shop/fetchProductById",
   async (id) => {
@@ -21,7 +20,6 @@ export const fetchProductById = createAsyncThunk(
   }
 );
 
-// Async thunk to fetch related products by category
 export const fetchRelatedProducts = createAsyncThunk(
   "shop/fetchRelatedProducts",
   async (category) => {
@@ -33,7 +31,6 @@ export const fetchRelatedProducts = createAsyncThunk(
   }
 );
 
-// Async thunk to fetch products
 export const fetchProducts = createAsyncThunk(
   "shop/fetchProducts",
   async () => {
@@ -43,7 +40,6 @@ export const fetchProducts = createAsyncThunk(
   }
 );
 
-// Async thunk to get cart items
 export const getCartItems = createAsyncThunk(
   "shop/getCartItems",
   async (userId) => {
@@ -57,7 +53,6 @@ export const getCartItems = createAsyncThunk(
   }
 );
 
-// Async thunk to add item to cart
 export const addToCart = createAsyncThunk(
   "shop/addToCart",
   async ({ userId, productId }) => {
@@ -76,7 +71,22 @@ export const addToCart = createAsyncThunk(
   }
 );
 
-// Async thunk to remove item from cart
+export const deleteCartItem = createAsyncThunk(
+  "shop/deleteCartItem",
+  async ({ userId, productId }) => {
+    const token = Cookies.get("token");
+    await fetch(
+      `http://localhost:5000/users/cart/delete/${userId}/${productId}`,
+      {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    return getCartItems(userId);
+  }
+);
+
 export const removeCartItem = createAsyncThunk(
   "shop/removeCartItem",
   async ({ userId, productId }) => {
@@ -108,20 +118,18 @@ export const addToWishlist = createAsyncThunk(
     });
 
     if (!response.ok) throw new Error("Failed to add item to wishlist");
-    return response.json(); // Assuming it returns the updated wishlist
+    return response.json();
   }
 );
 
-
 export const fetchCartItems = createAsyncThunk(
-  'cart/fetchCartItems',
+  "cart/fetchCartItems",
   async (userId, thunkAPI) => {
     const response = await fetch(`/cart/${userId}`);
     return response.json();
   }
 );
 
-// Create slice
 const shopSlice = createSlice({
   name: "shop",
   initialState,
@@ -168,25 +176,34 @@ const shopSlice = createSlice({
         state.cartItems = action.payload;
       })
       .addCase(addToCart.fulfilled, (state, action) => {
-        state.cartItems = action.payload; // Assuming it returns updated cart items
+        state.cartItems = action.payload;
       })
       .addCase(removeCartItem.fulfilled, (state, action) => {
-        state.cartItems = action.payload; // Assuming it returns updated cart items
+        state.cartItems = action.payload;
       })
       .addCase(addToWishlist.fulfilled, (state, action) => {
-        state.wishlistItems = action.payload.wishlist.products; // Assuming response has this structure
+        state.wishlistItems = action.payload.wishlist.products;
       })
       .addCase(fetchCartItems.fulfilled, (state, action) => {
         state.items = action.payload;
-        state.totalPrice = action.payload.reduce(
-          (sum, item) => sum + item.productId.price * item.quantity,
-          0
-        );
-      })
+        state.totalPrice = action.payload
+          .reduce((sum, item) => sum + item.productId.price * item.quantity, 0)
+          .addCase(deleteCartItem.fulfilled, (state, action) => {
+            state.cartItems = action.payload;
+          });
+      });
   },
 });
 
-export const { setSearch, setCurrentUser, logout } = shopSlice.actions;
+export const { setSearch, setCurrentUser, logout, clearCart } =
+  shopSlice.actions;
+
+export const getFilteredProducts = (state) => {
+  const searchTerm = state.shop.search.toLowerCase();
+  return state.shop.products.filter((product) =>
+    product.name.toLowerCase().includes(searchTerm)
+  );
+};
 
 export const selectShop = (state) => state.shop;
 

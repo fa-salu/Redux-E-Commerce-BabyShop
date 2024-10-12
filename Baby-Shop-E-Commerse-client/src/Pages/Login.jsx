@@ -1,13 +1,14 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ShopContext } from "../Context/CartItem/ShopContext";
+import { useDispatch, useSelector } from "react-redux";
+import { loginUser } from "../Redux/AuthSlice";
 import Cookie from "js-cookie";
 
 const Login = () => {
   const [input, setInput] = useState({ email: "", password: "" });
-  const [error, setError] = useState("");
-  const { setCurrentUser } = useContext(ShopContext);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { currentUser, error, loading } = useSelector((state) => state.auth);
 
   useEffect(() => {
     const token = Cookie.get("token");
@@ -19,7 +20,7 @@ const Login = () => {
         navigate("/profile");
       }
     }
-  }, [navigate]);
+  }, [navigate, currentUser]);
 
   const handleChange = (e) => {
     setInput({ ...input, [e.target.name]: e.target.value });
@@ -27,39 +28,18 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    try {
-      const response = await fetch("http://localhost:5000/users/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(input),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        Cookie.set("token", data.token);
-
-        if (data.user.isAdmin) {
-          Cookie.set("isAdmin", "true");
-          navigate("/dashboard");
-        } else {
-          Cookie.remove("isAdmin");
-          navigate("/profile");
-        }
-
-        Cookie.set("currentUser", JSON.stringify(data.user));
-        setCurrentUser(data.user);
-      } else {
-        setError(data.message);
-      }
-    } catch (error) {
-      console.error("Error logging in:", error);
-      setError("An unexpected error occurred. Please try again.");
-    }
+    dispatch(loginUser(input));
   };
+
+  useEffect(() => {
+    if (currentUser) {
+      if (currentUser.isAdmin) {
+        navigate("/dashboard");
+      } else {
+        navigate("/profile");
+      }
+    }
+  }, [currentUser, navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 text-gray-900">
@@ -96,20 +76,9 @@ const Login = () => {
             <button
               type="submit"
               className="mt-4 tracking-wide font-semibold bg-green-400 text-white w-full py-2 rounded-lg hover:bg-green-700 transition-all duration-300 ease-in-out flex items-center justify-center focus:shadow-outline focus:outline-none"
+              disabled={loading}
             >
-              <svg
-                className="w-5 h-5 -ml-2"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-                <circle cx="8.5" cy="7" r="4" />
-                <path d="M20 8v6M23 11h-6" />
-              </svg>
-              <span className="ml-2">Sign In</span>
+              {loading ? "Signing In..." : "Sign In"}
             </button>
             <p className="mt-6 text-xs text-gray-600 text-center">
               I agree to abide by Cartesian Kinetics{" "}

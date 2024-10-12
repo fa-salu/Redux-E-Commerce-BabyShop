@@ -2,19 +2,19 @@ import React, { useEffect } from "react";
 import { FaTimes } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { getCartItems, addToCart, removeCartItem } from "../../features/shopSlice"; // Import your Redux actions
+import { getCartItems, addToCart, removeCartItem } from "../../Redux/ShopSlice";
 
 const SlideBar = ({ isCartOpen, toggleCart }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   
-  const cartItems = useSelector((state) => state.shop.cartItems); // Select cart items from Redux state
-  const currentUser = useSelector((state) => state.shop.currentUser); // Select current user from Redux state
+  const cartItems = useSelector((state) => state.shop.cartItems); 
+  const currentUser = useSelector((state) => state.shop.currentUser); 
   const userId = currentUser ? currentUser.id : null;
 
   useEffect(() => {
     if (isCartOpen && userId) {
-      dispatch(getCartItems(userId)); // Fetch cart items when the cart opens
+      dispatch(getCartItems(userId)); 
     }
   }, [isCartOpen, userId, dispatch]);
 
@@ -25,8 +25,8 @@ const SlideBar = ({ isCartOpen, toggleCart }) => {
 
   const handleAddToCart = async (productId) => {
     try {
-      await dispatch(addToCart({ userId, productId })); // Dispatch add to cart action
-      dispatch(getCartItems(userId)); // Fetch updated cart items
+      await dispatch(addToCart({ userId, productId }));
+      dispatch(getCartItems(userId)); 
     } catch (error) {
       console.error("Error adding item to cart:", error);
     }
@@ -34,8 +34,8 @@ const SlideBar = ({ isCartOpen, toggleCart }) => {
 
   const handleRemoveFromCart = async (productId) => {
     try {
-      await dispatch(removeCartItem({ userId, productId })); // Dispatch remove from cart action
-      dispatch(getCartItems(userId)); // Fetch updated cart items
+      await dispatch(removeCartItem({ userId, productId })); 
+      dispatch(getCartItems(userId)); 
     } catch (error) {
       console.error("Error removing item from cart:", error);
     }

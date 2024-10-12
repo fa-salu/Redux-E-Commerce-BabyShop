@@ -14,7 +14,7 @@ import {
   setSearch,
   getFilteredProducts,
   getCartItems,
-} from "../../features/shopSlice"; // Import your Redux actions
+} from "../../Redux/ShopSlice";
 import "./Navbar.css";
 
 const Navbar = () => {
@@ -30,14 +30,14 @@ const Navbar = () => {
   const cartItems = useSelector((state) => state.shop.cartItems);
 
   const clearSearch = () => {
-    dispatch(setSearch("")); // Clear search using Redux action
+    dispatch(setSearch(""));
   };
 
   const isAdmin = Cookies.get("isAdmin");
 
   useEffect(() => {
     if (currentUser) {
-      dispatch(getCartItems(currentUser.id)); // Fetch cart items using Redux action
+      dispatch(getCartItems(currentUser.id));
     }
   }, [currentUser, dispatch]);
 
@@ -54,8 +54,8 @@ const Navbar = () => {
   };
 
   const handleSearchChange = (e) => {
-    dispatch(setSearch(e.target.value)); // Update search in Redux state
-    dispatch(getFilteredProducts(e.target.value)); // Fetch filtered products based on search
+    dispatch(setSearch(e.target.value));
+    dispatch(getFilteredProducts(e.target.value));
   };
 
   return (

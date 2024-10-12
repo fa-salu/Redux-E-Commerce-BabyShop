@@ -1,30 +1,30 @@
-import React, { useEffect, useContext } from "react";
-import { ShopContext } from "../Context/CartItem/ShopContext";
+import React, { useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHeart as solidHeart } from "@fortawesome/free-solid-svg-icons";
 import { faCartPlus } from "@fortawesome/free-solid-svg-icons";
 import { Link, useNavigate } from "react-router-dom";
 import { BsFillArrowLeftSquareFill } from "react-icons/bs";
+import { fetchCartItems, addToCart, addToWishlist, removeCartItem } from "../Redux/ShopSlice";
 
 const Wishlist = () => {
-  const {
-    currentUser,
-    wishlistItems,
-    getWishlist,
-    removeFromWishlist,
-    addToCart,
-  } = useContext(ShopContext);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const { currentUser, wishlistItems } = useSelector((state) => ({
+    currentUser: state.shop.currentUser,
+    wishlistItems: state.shop.wishlistItems,
+  }));
 
   useEffect(() => {
     if (currentUser) {
-      getWishlist(currentUser.id);
+      dispatch(addToWishlist(currentUser.id));
     }
-  }, [currentUser, getWishlist]);
+  }, [currentUser, dispatch]);
 
   const handleRemoveFromWishlist = (productId) => {
     if (currentUser) {
-      removeFromWishlist(currentUser.id, productId);
+      dispatch(removeCartItem({ userId: currentUser.id, productId }));
     } else {
       alert("Please log in to manage your wishlist.");
     }
@@ -32,7 +32,7 @@ const Wishlist = () => {
 
   const handleAddToCart = (productId) => {
     if (currentUser) {
-      addToCart(currentUser.id, productId);
+      dispatch(addToCart({ userId: currentUser.id, productId }));
     } else {
       alert("Please log in to add items to your cart.");
     }

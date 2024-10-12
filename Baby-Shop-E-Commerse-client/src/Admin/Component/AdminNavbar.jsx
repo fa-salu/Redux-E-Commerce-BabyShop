@@ -1,19 +1,21 @@
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import { FaUser } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import Cookie from "js-cookie";
-import { ShopContext } from "../../Context/CartItem/ShopContext";
+import { useDispatch, useSelector } from "react-redux";
+import { setCurrentUser, clearCart, logout } from "../../Redux/ShopSlice"; 
 
 const AdminNavbar = () => {
   const [showPopup, setShowPopup] = useState(false);
   const navigate = useNavigate();
-  const { setCurrentUser, setCartItems } = useContext(ShopContext)
-
-  const userData = JSON.parse(Cookie.get("currentUser") || "{}");
+  const dispatch = useDispatch();
+  
+  const currentUser = useSelector((state) => state.shop.currentUser);
 
   const handleLogout = () => {
-    setCurrentUser(null)
-    setCartItems([])
+    dispatch(logout()); 
+    dispatch(clearCart()); 
+
     Cookie.remove("token");
     Cookie.remove("isAdmin");
     Cookie.remove("currentUser");
@@ -33,8 +35,8 @@ const AdminNavbar = () => {
           {showPopup && (
             <div className="absolute right-0 mt-2 w-48 bg-white text-black rounded-lg shadow-lg">
               <div className="px-4 py-2 border-b border-gray-300">
-                <p className="font-semibold">{userData.username}</p>
-                <p className="text-sm text-gray-600">{userData.email}</p>
+                <p className="font-semibold">{currentUser.username}</p>
+                <p className="text-sm text-gray-600">{currentUser.email}</p>
               </div>
               <button
                 className="w-full text-left px-4 py-2 hover:bg-gray-200"

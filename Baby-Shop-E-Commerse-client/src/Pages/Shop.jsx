@@ -1,39 +1,37 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHeart as solidHeart } from "@fortawesome/free-solid-svg-icons";
 import { faHeart as regularHeart } from "@fortawesome/free-regular-svg-icons";
-import { ShopContext } from "../Context/CartItem/ShopContext";
-import useFetch from "../utils/Api";
+import { useSelector, useDispatch } from "react-redux";
+import { addToWishlist, fetchProducts } from "../Redux/ShopSlice";
 import CategoryProducts from "../Component/Category/Categories";
 import Footer from "../Component/Footer/Footer";
 import Spinner from "../Component/Spinner/Spinner";
 
 const Shop = () => {
   const { category } = useParams();
-  const { addToWishlist, wishlistItems, currentUser, getWishlist } =
-    useContext(ShopContext);
-  const [products, setProducts] = useState([]);
+  const dispatch = useDispatch();
+  
+  const { wishlistItems, products, status, error } = useSelector((state) => state.shop);
+  const currentUser = useSelector((state) => state.shop.currentUser);
+  const [fetchedProducts, setFetchedProducts] = useState([]);
   const navigate = useNavigate();
 
-  // Fetch products based on category
-  const { data, isPending, error } = useFetch(
-    category && category !== "All"
-      ? `http://localhost:5000/users/products/${category}`
-      : "http://localhost:5000/users/products"
-  );
+  useEffect(() => {
+    dispatch(fetchProducts());
+  }, [dispatch]);
 
   useEffect(() => {
-    if (data) {
-      setProducts(data);
-    }
-  }, [data]);
+    if (products.length > 0) {
+      const filteredProducts =
+        category && category !== "All"
+          ? products.filter((product) => product.category === category)
+          : products;
 
-  useEffect(() => {
-    if (currentUser && wishlistItems.length === 0) {
-      getWishlist(currentUser.id);
+      setFetchedProducts(filteredProducts);
     }
-  }, [currentUser, getWishlist, wishlistItems]);
+  }, [products, category]);
 
   const isProductInWishlist = (productId) =>
     wishlistItems.some((item) => item._id === productId);
@@ -44,7 +42,7 @@ const Shop = () => {
       navigate("/login");
       return;
     }
-    addToWishlist(currentUser.id, productId);
+    dispatch(addToWishlist({ userId: currentUser.id, productId }));
   };
 
   return (
@@ -61,10 +59,10 @@ const Shop = () => {
           </h1>
           <hr className="m-8" />
         </div>
-        {isPending && <Spinner />}
+        {status === "loading" && <Spinner />}
         {error && <div>Error: {error}</div>}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {products.map((item) => (
+          {fetchedProducts.map((item) => (
             <div
               key={item._id}
               className="bg-white shadow-md rounded-lg overflow-hidden transform hover:scale-105 transition-transform duration-300"
@@ -85,20 +83,15 @@ const Shop = () => {
                   {"★".repeat(item.stars)}
                   {"☆".repeat(5 - item.stars)}
                 </p>
-                {/* Wishlist Icon */}
                 <button
                   onClick={() => toggleWishlist(item._id)}
                   className="mt-2"
                 >
                   <FontAwesomeIcon
-                    icon={
-                      isProductInWishlist(item._id) ? solidHeart : regularHeart
-                    }
+                    icon={isProductInWishlist(item._id) ? solidHeart : regularHeart}
                     size="lg"
                     className={`${
-                      isProductInWishlist(item._id)
-                        ? "text-red-500"
-                        : "text-gray-400"
+                      isProductInWishlist(item._id) ? "text-red-500" : "text-gray-400"
                     } transition-colors duration-300`}
                   />
                 </button>

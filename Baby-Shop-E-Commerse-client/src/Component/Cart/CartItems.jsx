@@ -9,7 +9,8 @@ import {
   removeCartItem,
   deleteCartItem,
   selectShop,
-} from "../../features/shopSlice";
+} from "../../Redux/ShopSlice";
+
 
 const CartItems = () => {
   const dispatch = useDispatch();
@@ -17,14 +18,12 @@ const CartItems = () => {
   const { cartItems, currentUser } = useSelector(selectShop);
   const [totalPrice, setTotalPrice] = useState(0);
 
-  // Fetch cart items when the component mounts
   useEffect(() => {
     if (currentUser) {
       dispatch(getCartItems(currentUser.id));
     }
   }, [dispatch, currentUser]);
 
-  // Calculate total price
   useEffect(() => {
     const total = cartItems.reduce(
       (sum, item) => sum + item.productId.price * item.quantity,
@@ -33,28 +32,24 @@ const CartItems = () => {
     setTotalPrice(total);
   }, [cartItems]);
 
-  // Handle Add to Cart
   const handleAddToCart = async (productId) => {
     if (currentUser) {
       dispatch(addToCart({ userId: currentUser.id, productId }));
     }
   };
 
-  // Handle Remove from Cart
   const handleRemoveFromCart = async (productId) => {
     if (currentUser) {
       dispatch(removeCartItem({ userId: currentUser.id, productId }));
     }
   };
 
-  // Handle Delete Cart Item
   const handleDeleteCart = async (productId) => {
     if (currentUser) {
       dispatch(deleteCartItem({ userId: currentUser.id, productId }));
     }
   };
 
-  // Handle Checkout
   const handleCheckout = () => {
     navigate("/payment");
   };

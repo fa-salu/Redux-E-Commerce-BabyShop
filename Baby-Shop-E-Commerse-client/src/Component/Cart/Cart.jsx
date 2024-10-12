@@ -11,22 +11,18 @@ const Cart = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  // Get state from Redux store
   const { product, relatedProducts, currentUser, relatedLoading } = useSelector((state) => state.shop);
 
-  // Fetch the product by ID from the backend
   useEffect(() => {
     dispatch(fetchProductById(id));
   }, [dispatch, id]);
 
-  // Fetch related products based on product's category when the product is loaded
   useEffect(() => {
     if (product?.category) {
       dispatch(fetchRelatedProducts(product.category));
     }
   }, [dispatch, product]);
 
-  // Handle Add to Cart Click
   const handleAddToCartClick = async () => {
     if (currentUser) {
       try {
