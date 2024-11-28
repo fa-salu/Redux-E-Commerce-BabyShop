@@ -12,6 +12,7 @@ const Login = () => {
 
   useEffect(() => {
     const token = Cookie.get("token");
+    console.log("token", token);
     const isAdmin = Cookie.get("isAdmin");
     if (token) {
       if (isAdmin === "true") {
@@ -20,7 +21,7 @@ const Login = () => {
         navigate("/profile");
       }
     }
-  }, [navigate, currentUser]);
+  }, [currentUser]);
 
   const handleChange = (e) => {
     setInput({ ...input, [e.target.name]: e.target.value });

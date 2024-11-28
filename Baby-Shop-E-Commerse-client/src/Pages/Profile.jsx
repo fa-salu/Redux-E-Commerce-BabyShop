@@ -1,13 +1,16 @@
 import React, { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
-import { logout, selectShop } from "../Redux/ShopSlice";
+import { useDispatch } from "react-redux";
+import { logout } from "../Redux/AuthSlice";
 import { FaHeart, FaInfoCircle } from "react-icons/fa";
+import Cookies from "js-cookie";
 
 const Profile = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { currentUser } = useSelector(selectShop);
+
+  const currentUser = Cookies.get("token");
+  console.log("curr", currentUser);
 
   useEffect(() => {
     if (!currentUser) {

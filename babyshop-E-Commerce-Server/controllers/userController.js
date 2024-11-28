@@ -128,7 +128,6 @@ exports.getProductsByCategory = async (req, res) => {
 exports.getProductById = async (req, res) => {
   try {
     const { productId } = req.params;
-    // console.log(productId);
 
     const product = await Product.findById(productId);
     if (!product || product.isDeleted) {

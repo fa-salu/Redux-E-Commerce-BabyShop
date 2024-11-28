@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
 export const placeOrder = createAsyncThunk(
   'order/placeOrder',
-  async ({ userId, name, place, phone, address, token }, thunkAPI) => {
+  async ({ userId, name, place, phone, address, token }) => {
     const response = await fetch('/users/order', {
       method: 'POST',
       headers: {
@@ -17,7 +17,7 @@ export const placeOrder = createAsyncThunk(
 
 export const verifyPayment = createAsyncThunk(
   'order/verifyPayment',
-  async ({ paymentData, token }, thunkAPI) => {
+  async ({ paymentData, token }) => {
     const response = await fetch('/users/order/verify', {
       method: 'POST',
       headers: {
@@ -38,7 +38,7 @@ const orderSlice = createSlice({
       .addCase(placeOrder.fulfilled, (state, action) => {
         state.orderData = action.payload;
       })
-      .addCase(verifyPayment.fulfilled, (state, action) => {
+      .addCase(verifyPayment.fulfilled, (state) => {
         state.status = 'verified';
       });
   },

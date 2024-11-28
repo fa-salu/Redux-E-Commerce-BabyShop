@@ -4,8 +4,8 @@ import Cookies from "js-cookie";
 const initialState = {
   products: [],
   cartItems: [],
+  relatedProducts: [],
   wishlistItems: [],
-  currentUser: null,
   search: "",
   status: "idle",
   error: null,
@@ -23,6 +23,8 @@ export const fetchProductById = createAsyncThunk(
 export const fetchRelatedProducts = createAsyncThunk(
   "shop/fetchRelatedProducts",
   async (category) => {
+    console.log("dd", category);
+
     const response = await fetch(
       `http://localhost:5000/users/products/${category}`
     );
@@ -124,7 +126,7 @@ export const addToWishlist = createAsyncThunk(
 
 export const fetchCartItems = createAsyncThunk(
   "cart/fetchCartItems",
-  async (userId, thunkAPI) => {
+  async (userId) => {
     const response = await fetch(`/cart/${userId}`);
     return response.json();
   }
@@ -136,15 +138,6 @@ const shopSlice = createSlice({
   reducers: {
     setSearch: (state, action) => {
       state.search = action.payload;
-    },
-    setCurrentUser: (state, action) => {
-      state.currentUser = action.payload;
-    },
-    logout: (state) => {
-      state.currentUser = null;
-      state.cartItems = [];
-      Cookies.remove("currentUser");
-      Cookies.remove("token");
     },
     clearCart: (state) => {
       state.items = [];
@@ -195,8 +188,7 @@ const shopSlice = createSlice({
   },
 });
 
-export const { setSearch, setCurrentUser, logout, clearCart } =
-  shopSlice.actions;
+export const { setSearch, clearCart } = shopSlice.actions;
 
 export const getFilteredProducts = (state) => {
   const searchTerm = state.shop.search.toLowerCase();

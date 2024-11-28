@@ -1,17 +1,26 @@
-import React, { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchProductById, fetchRelatedProducts, addToCart } from "../../Redux/ShopSlice";
+import {
+  fetchProductById,
+  fetchRelatedProducts,
+  addToCart,
+} from "../../Redux/ShopSlice";
 import Spinner from "../Spinner/Spinner";
 import { BsFillArrowLeftSquareFill } from "react-icons/bs";
 import { FaShoppingCart } from "react-icons/fa";
+import Cookies from "js-cookie";
 
 const Cart = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const { product, relatedProducts, currentUser, relatedLoading } = useSelector((state) => state.shop);
+  const currentUser = Cookies.get("token");
+
+  const { product, relatedProducts, relatedLoading } = useSelector(
+    (state) => state.shop
+  );
 
   useEffect(() => {
     dispatch(fetchProductById(id));
@@ -88,31 +97,35 @@ const Cart = () => {
           <Spinner />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {relatedProducts.map((item) => (
-              <div
-                key={item._id}
-                onClick={() => navigate(`/shop/${item._id}`)}
-                className="bg-white shadow-md rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transform hover:scale-105 transition-transform duration-300"
-              >
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  className="w-full h-52 object-cover"
-                />
-                <div className="p-4">
-                  <h4 className="text-lg font-semibold font-serif text-center text-gray-900">
-                    {item.name}
-                  </h4>
-                  <p className="text-gray-700 font-serif text-center ">
-                    ${item.price}
-                  </p>
-                  <p className="text-yellow-500 text-center">
-                    {"★".repeat(item.stars)}
-                    {"☆".repeat(5 - item.stars)}
-                  </p>
+            {relatedProducts && relatedProducts.length > 0 ? (
+              relatedProducts.map((item) => (
+                <div
+                  key={item._id}
+                  onClick={() => navigate(`/shop/${item._id}`)}
+                  className="bg-white shadow-md rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transform hover:scale-105 transition-transform duration-300"
+                >
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    className="w-full h-52 object-cover"
+                  />
+                  <div className="p-4">
+                    <h4 className="text-lg font-semibold font-serif text-center text-gray-900">
+                      {item.name}
+                    </h4>
+                    <p className="text-gray-700 font-serif text-center ">
+                      ${item.price}
+                    </p>
+                    <p className="text-yellow-500 text-center">
+                      {"★".repeat(item.stars)}
+                      {"☆".repeat(5 - item.stars)}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p>No related products found.</p>
+            )}
           </div>
         )}
       </div>

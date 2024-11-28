@@ -2,19 +2,20 @@ import React, { useState } from "react";
 import { FaUser } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import Cookie from "js-cookie";
-import { useDispatch, useSelector } from "react-redux";
-import { setCurrentUser, clearCart, logout } from "../../Redux/ShopSlice"; 
+import { useDispatch } from "react-redux";
+import { logout } from "../../Redux/AuthSlice";
+import { clearCart } from "../../Redux/ShopSlice";
 
 const AdminNavbar = () => {
   const [showPopup, setShowPopup] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  
-  const currentUser = useSelector((state) => state.shop.currentUser);
+
+  const currentUser = Cookies.get("isAdmin");
 
   const handleLogout = () => {
-    dispatch(logout()); 
-    dispatch(clearCart()); 
+    dispatch(logout());
+    dispatch(clearCart());
 
     Cookie.remove("token");
     Cookie.remove("isAdmin");
